@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<CDataFileMgr__ContentsOfDataFileXml>
+    <disabledFiles />
+    <includedXmlFiles />
+    <dataFiles>
+        <Item>
+            <filename>dlc_patchDay18NG:/%PLATFORM%/levels/gta5/drift.rpf</filename>
+            <fileType>RPF_FILE</fileType>
+            <overlay value="true" />
+            <disabled value="true" />
+            <persistent value="true" />
+        </Item>
+        <Item>      
+            <filename>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/drift.ityp</filename>
+            <fileType>DLC_ITYP_REQUEST</fileType>
+            <overlay value="false" />
+            <disabled value="true" />
+            <persistent value="false" />
+            <contents>CONTENTS_PROPS</contents>
+        </Item>
+        <Item>
+            <filename>dlc_patchDay18NG:/%PLATFORM%/levels/gta5/ymap.rpf</filename>
+            <fileType>RPF_FILE</fileType>
+            <overlay value="true" />
+            <disabled value="true" />
+            <persistent value="true" />
+        </Item>
+        <Item>
+            <filename>dlc_PATCHDAY18NG:/%PLATFORM%/levels/gta5/vehicles.rpf</filename>
+            <fileType>RPF_FILE</fileType>
+            <locked value="true"/>
+            <disabled value="true"/>
+            <persistent value="true"/>
+            <overlay value="true"/>
+        </Item>
+        <Item>
+            <filename>dlc_patchDay18NG:/%PLATFORM%/anim/ingame/clip_veh@.rpf</filename>
+            <fileType>RPF_FILE</fileType>
+            <disabled value="true"/>
+            <persistent value="true"/>
+            <overlay value="true"/>
+        </Item>
+                 <Item>     
+            <filename>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/props/Icons13.rpf</filename>
+            <fileType>RPF_FILE</fileType>
+            <overlay value="true" />
+            <disabled value="true" />
+            <persistent value="true" />
+        </Item>
+        <Item>      
+            <filename>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/props/Icons13.ityp</filename>
+            <fileType>DLC_ITYP_REQUEST</fileType>
+            <overlay value="false" />
+            <disabled value="true" />
+            <persistent value="false" />
+            <contents>CONTENTS_PROPS</contents>
+        </Item>
+    </dataFiles>
+    <contentChangeSets>
+        <Item>
+            <changeSetName>CCS_PATCHDAY18_NG_INIT</changeSetName>
+            <filesToEnable>
+            </filesToEnable>
+        </Item> 
+        <Item>
+            <changeSetName>CCS_PATCHDAY18_NG_TEXT</changeSetName>
+            <filesToEnable>
+            </filesToEnable>
+        </Item>
+        <Item>
+            <changeSetName>CCS_PATCHDAY18_NG_STREAMING</changeSetName>
+            <filesToEnable>
+                <Item>dlc_PATCHDAY18NG:/%PLATFORM%/levels/gta5/drift.rpf</Item>
+                <Item>dlc_PATCHDAY18NG:/%PLATFORM%/levels/gta5/ymap.rpf</Item>
+                <Item>dlc_PATCHDAY18NG:/%PLATFORM%/levels/gta5/drift.ityp</Item>
+                <Item>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/vehicles.rpf</Item>
+                <Item>dlc_patchDay18NG:/%PLATFORM%/anim/ingame/clip_veh@.rpf</Item>
+                <Item>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/props/Icons13.rpf</Item>
+                <Item>dlc_PATCHDAY18ng:/%PLATFORM%/levels/gta5/props/Icons13.ityp</Item>
+            </filesToEnable>
+        </Item>
+        <Item>
+            <changeSetName>CCS_PATCHDAY18_NG_STREAMING_MAP</changeSetName>
+            <filesToEnable>
+                <!-- <Item>dlc_PATCHDAY17NG:/%PLATFORM%/models/cdimages/PATCHDAY17ng_male.rpf</Item> -->
+            </filesToEnable>
+            <executionConditions>
+                <activeChangesetConditions>
+                </activeChangesetConditions>
+                <genericConditions>$level=MO_JIM_L11</genericConditions>
+            </executionConditions>
+        </Item>
+    </contentChangeSets>
+    <patchFiles />
+</CDataFileMgr__ContentsOfDataFileXml>

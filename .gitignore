@@ -1,0 +1,16 @@
+# .NET / build
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Published binaries (собираются локально через tools/Publish-Release.ps1)
+publish/
+publish-next/
+.feed/
+
+# Локальные бэкапы dlc.rpf и тестовый мусор
+*.bak
+Smoke/bin/
+Smoke/obj/
