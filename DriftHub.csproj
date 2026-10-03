@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Content Include="File\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Compile Remove="Smoke\**" />
     <None Remove="Smoke\**" />
   </ItemGroup>
