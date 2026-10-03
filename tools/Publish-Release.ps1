@@ -8,7 +8,7 @@
 #   4. Если есть `gh` — создаёт GitHub-релиз v<Version> и заливает ассеты.
 #      Если нет — печатает ручную инструкцию.
 param(
-    [string]$Version = "1.1.0",
+    [string]$Version = "1.1.1",
     [string]$Repo = "Egzotik/drifthub",
     [string]$SpotsDir = "spots",
     [switch]$SkipBuild

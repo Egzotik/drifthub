@@ -59,6 +59,11 @@ public static class UpdateService
         {
             raw = await Http.GetByteArrayAsync(FeedUrl, ct);
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            log?.Invoke("Обновления: релиз пока не опубликован, работаю офлайн.");
+            return new(false, CurrentVersion, "", 0, 0);
+        }
         catch (Exception ex)
         {
             log?.Invoke("Обновления: нет связи с сервером (" + ex.Message + "), работаю офлайн.");

@@ -11,6 +11,8 @@ public partial class MainWindow : Window
 {
     private List<Spot> _spots = new();
     private bool _busy;
+    private PeriodicTimer? _updateTimer;
+    private string _notifiedAppVersion = "";
     private static readonly SolidColorBrush Green = new(Color.FromRgb(0x3D, 0xD6, 0x8C));
     private static readonly SolidColorBrush Gray = new(Color.FromRgb(0x55, 0x55, 0x55));
     private readonly string _settingsPath = Path.Combine(
@@ -76,34 +78,58 @@ public partial class MainWindow : Window
     }
 
     // Проверка обновлений и докачка спотов — в фоне, интерфейс не блокируем.
-    // Стартовый оверлей висит до конца проверки.
+    // При старте висит полноэкранный оверлей; дальше проверки идут каждые
+    // 30 минут тихо (только строки в лог + уведомление о новой версии).
     private async Task CheckUpdatesOnStartupAsync()
+    {
+        await CheckUpdatesAsync(showOverlay: true);
+        StartPeriodicUpdateChecks();
+    }
+
+    private async Task CheckUpdatesAsync(bool showOverlay)
     {
         if (_busy) return;
         _busy = true;
         try
         {
-            StartupText.Text = "Проверка обновлений...";
+            if (showOverlay) StartupText.Text = "Проверка обновлений...";
             var res = await Task.Run(() =>
-                UpdateService.CheckAsync(m => Dispatcher.Invoke(() => { StartupText.Text = m; Log(m); })).GetAwaiter().GetResult());
+                UpdateService.CheckAsync(m => Dispatcher.Invoke(() =>
+                {
+                    if (showOverlay) StartupText.Text = m;
+                    Log(m);
+                })).GetAwaiter().GetResult());
             if (res.SpotsAdded + res.SpotsUpdated > 0)
                 RefreshAll();
-            if (res.AppUpdated)
+            if (res.AppUpdated && res.NewVersion != _notifiedAppVersion)
             {
-                StartupOverlay.Visibility = Visibility.Collapsed;
+                _notifiedAppVersion = res.NewVersion;
+                if (showOverlay) StartupOverlay.Visibility = Visibility.Collapsed;
                 MessageBox.Show($"Скачана версия {res.NewVersion}. Приложение перезапустится.",
                     "DriftHub — обновление", MessageBoxButton.OK, MessageBoxImage.Information);
                 UpdateService.LaunchUpdaterAndRestart(res.NewExePath);
                 Application.Current.Shutdown();
-                return;
             }
         }
         catch (Exception ex) { Log("Обновления: " + ex.Message); }
         finally
         {
             _busy = false;
-            StartupOverlay.Visibility = Visibility.Collapsed;
+            if (showOverlay) StartupOverlay.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void StartPeriodicUpdateChecks()
+    {
+        _updateTimer ??= new PeriodicTimer(TimeSpan.FromMinutes(30));
+        _ = Task.Run(async () =>
+        {
+            while (await _updateTimer.WaitForNextTickAsync())
+            {
+                try { await Dispatcher.InvokeAsync(() => CheckUpdatesAsync(showOverlay: false)); }
+                catch { }
+            }
+        });
     }
 
     private async Task RunBusy(Func<Action<string>, Task> op)
@@ -138,6 +164,9 @@ public partial class MainWindow : Window
         else Log("Не нашёл GTA — выбери вручную.");
         RefreshAll();
     }
+
+    private async void CheckUpdatesBtn_Click(object sender, RoutedEventArgs e) =>
+        await CheckUpdatesAsync(showOverlay: true);
 
     private async void InstallBaseBtn_Click(object sender, RoutedEventArgs e)
     {
