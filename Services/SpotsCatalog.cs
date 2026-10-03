@@ -21,11 +21,13 @@ public static class SpotsCatalog
     {
         var root = SpotsRoot;
         if (!Directory.Exists(root)) Directory.CreateDirectory(root);
-        if (!Directory.GetDirectories(root).Any()) CreateReadme(root);
 
         var list = new List<Spot>();
         foreach (var dir in Directory.GetDirectories(root).OrderBy(d => d))
         {
+            // Служебная папка-шаблон рядом с exe — не спот, пропускаем.
+            if (string.Equals(Path.GetFileName(dir), "_example", StringComparison.OrdinalIgnoreCase))
+                continue;
             try
             {
                 string id = Path.GetFileName(dir);
@@ -65,20 +67,5 @@ public static class SpotsCatalog
             catch { }
         }
         return list;
-    }
-
-    private static void CreateReadme(string root)
-    {
-        var dir = Path.Combine(root, "_example");
-        Directory.CreateDirectory(dir);
-        File.WriteAllText(Path.Combine(dir, "spot.json"), """
-        {
-          "id": "port",
-          "name": "Port (пример)",
-          "description": "Положи рядом чистый .ymap этого спота и preview.jpg. Имя файла = имя записи в ymap.rpf."
-        }
-        """);
-        File.WriteAllText(Path.Combine(dir, "КАК_ДОБАВИТЬ.txt"),
-            "1. Скопируй чистый .ymap спота в эту папку (или создай свою папку в spots/).\r\n2. Рядом положи preview.jpg.\r\n3. Перезапусти приложение — спот появится с галочкой.");
     }
 }

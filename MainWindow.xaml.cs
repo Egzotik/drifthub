@@ -113,8 +113,14 @@ public partial class MainWindow : Window
         RestoreBtn.IsEnabled = st.BackupExists;
 
         _spots = SpotsCatalog.Load();
-        if (_spots.Count == 0)
-            SpotsHint.Text = "Папка spots/ пуста. " + MappingStore.SpotsHint;
+        bool empty = _spots.Count == 0;
+        SpotsScroll.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        EmptyPanel.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        if (empty)
+        {
+            SpotsHint.Text = "";
+            EmptyHint.Text = "Папка spots/ пуста. " + MappingStore.SpotsHint;
+        }
         else
         {
             SpotsHint.Text = $"{_spots.Count} спот(ов)";

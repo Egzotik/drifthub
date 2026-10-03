@@ -11,7 +11,7 @@
 #   заливает DriftHub.exe в GitHub-релиз через `gh` (или печатает ручную инструкцию).
 #   Затем: git add feed && git commit && git push.
 param(
-    [string]$Version = "1.2.0",
+    [string]$Version = "1.2.1",
     [string]$Repo = "Egzotik/drifthub",
     [string]$Branch = "main",
     [string]$SpotsDir = "spots",
@@ -38,7 +38,8 @@ if (Test-Path -LiteralPath $Src) {
         if ($null -eq $ym) { Write-Host "skip $($dir.Name): нет .ymap"; continue }
         $meta = @{ id = $dir.Name; name = $dir.Name; description = ""; version = 1 }
         if (Test-Path -LiteralPath $jp) {
-            try { $j = Get-Content -LiteralPath $jp -Raw | ConvertFrom-Json
+            # ВАЖНО: читать явно как UTF-8 — Get-Content в PS 5.1 читает без BOM как ANSI и портит русский текст.
+            try { $j = [IO.File]::ReadAllText($jp, [Text.UTF8Encoding]::new($false)) | ConvertFrom-Json
                 if ($j.id) { $meta.id = $j.id }
                 if ($j.name) { $meta.name = $j.name }
                 if ($j.description) { $meta.description = $j.description }
@@ -69,7 +70,7 @@ $ManifestPath = Join-Path $FeedDir "manifest.json"
 # app-секция: из существующего манифеста, либо новая при релизе exe
 $appVersion = ""; $appUrl = ""; $appSha = ""
 if (Test-Path -LiteralPath $ManifestPath) {
-    try { $old = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    try { $old = [IO.File]::ReadAllText($ManifestPath, [Text.UTF8Encoding]::new($false)) | ConvertFrom-Json
         $appVersion = $old.appVersion; $appUrl = $old.appUrl; $appSha = $old.appSha256
     } catch { Write-Host "warn: битый старый manifest, app-секция сброшена" }
 }
