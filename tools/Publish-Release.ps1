@@ -11,7 +11,7 @@
 #   заливает DriftHub.exe в GitHub-релиз через `gh` (или печатает ручную инструкцию).
 #   Затем: git add feed && git commit && git push.
 param(
-    [string]$Version = "1.1.1",
+    [string]$Version = "1.1.2",
     [string]$Repo = "Egzotik/drifthub",
     [string]$Branch = "main",
     [string]$SpotsDir = "spots",

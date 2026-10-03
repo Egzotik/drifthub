@@ -39,7 +39,11 @@ public static class UpdateService
         }
     }
 
-    private static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = true })
+    private static readonly HttpClient Http = new(new SocketsHttpHandler
+    {
+        AllowAutoRedirect = true,
+        ConnectTimeout = TimeSpan.FromSeconds(15),
+    })
     {
         Timeout = TimeSpan.FromSeconds(60)
     };
@@ -54,6 +58,12 @@ public static class UpdateService
 
     public static async Task<UpdateCheckResult> CheckAsync(Action<string>? log = null, CancellationToken ct = default)
     {
+        // Жёсткий общий таймаут поверх HttpClient.Timeout — проверка никогда не висит вечно.
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(45));
+        ct = timeout.Token;
+
+        log?.Invoke("Обновления: проверяю " + FeedUrl);
         byte[] raw;
         try
         {
@@ -62,6 +72,11 @@ public static class UpdateService
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             log?.Invoke("Обновления: фид пока пуст, работаю офлайн.");
+            return new(false, CurrentVersion, "", 0, 0);
+        }
+        catch (OperationCanceledException)
+        {
+            log?.Invoke("Обновления: превышено время ожидания, работаю офлайн.");
             return new(false, CurrentVersion, "", 0, 0);
         }
         catch (Exception ex)
@@ -229,16 +244,22 @@ public static class UpdateService
 
     private static bool IsNewer(string remote, string current)
     {
+        if (string.IsNullOrWhiteSpace(remote)) return false;
         if (Version.TryParse(Normalize(remote), out var r) && Version.TryParse(Normalize(current), out var c))
             return r > c;
-        return !string.Equals(remote, current, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(remote);
+        return !string.Equals(remote, current, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Normalize(string v)
     {
         v = v.Trim().TrimStart('v', 'V');
+        if (string.IsNullOrWhiteSpace(v)) return "0.0.0";
         var parts = v.Split('.');
-        while (parts.Length < 3) v += ".0";
+        while (parts.Length < 3)
+        {
+            v += ".0";
+            parts = v.Split('.');
+        }
         return v;
     }
 

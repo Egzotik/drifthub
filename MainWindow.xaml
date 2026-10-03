@@ -30,7 +30,7 @@
                 <StackPanel Orientation="Horizontal">
                     <Border Width="42" Height="42" CornerRadius="11" Background="{StaticResource Accent}" Margin="0,0,13,0"><TextBlock Text="D" FontSize="23" FontWeight="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                     <StackPanel><TextBlock Text="DRIFTHUB" FontSize="20" FontWeight="Black"/><TextBlock Text="MAP INSTALLER / GTA V" Foreground="{StaticResource Muted}" FontSize="10" FontWeight="SemiBold" Margin="1,2,0,0"/></StackPanel>
-                    <TextBlock x:Name="VersionLabel" Text="v1.1.1" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock x:Name="VersionLabel" Text="v1.1.2" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBox x:Name="GtaPathBox" Width="390" Margin="0,0,8,0" IsReadOnly="True" ToolTip="Папка с GTA V"/>
@@ -105,6 +105,7 @@
                 <TextBlock Text="DRIFTHUB" FontSize="18" FontWeight="Black" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="StartupText" Text="Загрузка..." Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,14"/>
                 <ProgressBar IsIndeterminate="True" Height="5"/>
+                <Button Content="Продолжить без проверки" Click="StartupSkip_Click" HorizontalAlignment="Center" Margin="0,16,0,0" Padding="12,6" FontSize="12"/>
             </StackPanel>
         </Border>
     </Grid>

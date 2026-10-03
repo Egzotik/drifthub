@@ -13,6 +13,7 @@ public partial class MainWindow : Window
     private bool _busy;
     private PeriodicTimer? _updateTimer;
     private string _notifiedAppVersion = "";
+    private CancellationTokenSource? _startupCts;
     private static readonly SolidColorBrush Green = new(Color.FromRgb(0x3D, 0xD6, 0x8C));
     private static readonly SolidColorBrush Gray = new(Color.FromRgb(0x55, 0x55, 0x55));
     private readonly string _settingsPath = Path.Combine(
@@ -90,15 +91,26 @@ public partial class MainWindow : Window
     {
         if (_busy) return;
         _busy = true;
+        using var cts = new CancellationTokenSource();
+        _startupCts = cts;
         try
         {
             if (showOverlay) StartupText.Text = "Проверка обновлений...";
-            var res = await Task.Run(() =>
-                UpdateService.CheckAsync(m => Dispatcher.Invoke(() =>
+            // BeginInvoke вместо Invoke: колбэк никогда не блокирует сетевой поток.
+            Action<string> cb = m =>
+            {
+                try
                 {
-                    if (showOverlay) StartupText.Text = m;
-                    Log(m);
-                })).GetAwaiter().GetResult());
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        if (showOverlay) StartupText.Text = m;
+                        Log(m);
+                    });
+                }
+                catch { }
+            };
+            var res = await Task.Run(() => UpdateService.CheckAsync(cb, cts.Token));
+            if (cts.IsCancellationRequested) return; // пользователь пропустил проверку
             if (res.SpotsAdded + res.SpotsUpdated > 0)
                 RefreshAll();
             if (res.AppUpdated && res.NewVersion != _notifiedAppVersion)
@@ -115,8 +127,16 @@ public partial class MainWindow : Window
         finally
         {
             _busy = false;
+            _startupCts = null;
             if (showOverlay) StartupOverlay.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void StartupSkip_Click(object sender, RoutedEventArgs e)
+    {
+        try { _startupCts?.Cancel(); } catch { }
+        StartupOverlay.Visibility = Visibility.Collapsed;
+        Log("Проверка обновлений пропущена пользователем.");
     }
 
     private void StartPeriodicUpdateChecks()
@@ -126,7 +146,7 @@ public partial class MainWindow : Window
         {
             while (await _updateTimer.WaitForNextTickAsync())
             {
-                try { await Dispatcher.InvokeAsync(() => CheckUpdatesAsync(showOverlay: false)); }
+                try { await Dispatcher.InvokeAsync(() => CheckUpdatesAsync(showOverlay: false)).Task.Unwrap(); }
                 catch { }
             }
         });
