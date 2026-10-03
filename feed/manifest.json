@@ -10,7 +10,9 @@
                       "description":  "Замени файлы в этой папке на свой спот и подними version.",
                       "file":  "meinmacht.ymap",
                       "ymapUrl":  "https://raw.githubusercontent.com/Egzotik/drifthub/main/spots/testegzo/meinmacht.ymap",
-                      "ymapSha256":  "8ace0362713b80c8b3f91b24e3a3ad9812a65b57c07c67e78968e71e48ab16b3"
+                      "ymapSha256":  "8ace0362713b80c8b3f91b24e3a3ad9812a65b57c07c67e78968e71e48ab16b3",
+                      "previewUrl":  "https://raw.githubusercontent.com/Egzotik/drifthub/main/spots/testegzo/preview.png",
+                      "previewSha256":  "0a7fef966b235e8b0ca2ec05754eccfa3771c38a8a2cb2370fbf4b41b00de59e"
                   },
                   {
                       "id":  "TestUbi",
