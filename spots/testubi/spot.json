@@ -3,5 +3,5 @@
   "name": "TestUbi",
   "description": "Замени файлы в этой папке на свой спот и подними version.",
   "ymap": "moxy.ymap",
-  "version": 1
+  "version": 2
 }
