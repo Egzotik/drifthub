@@ -1,16 +1,21 @@
-# Сборка релиза DriftHub + manifest.json для автообновлений.
-# Использование:
-#   .\tools\Publish-Release.ps1 -Version "1.0.1" [-Repo "Egzotik/drifthub"] [-SpotsDir "spots"] [-SkipBuild]
-# Что делает:
-#   1. Публикует single-file DriftHub.exe в publish-next (если не -SkipBuild).
-#   2. Сканирует SpotsDir (папки с spot.json + *.ymap), считает SHA256.
-#   3. Кладет в .feed/: DriftHub.exe, <id>.ymap, <id>.preview.<ext>, manifest.json
-#   4. Если есть `gh` — создаёт GitHub-релиз v<Version> и заливает ассеты.
-#      Если нет — печатает ручную инструкцию.
+﻿# DriftHub: споты + релизы.
+#
+# Споты для всех (без нового exe):
+#   1. Положи спот в spots/<имя>/ (spot.json + .ymap + preview.jpg), подними version в spot.json.
+#   2. .\tools\Publish-Release.ps1 -SpotsOnly
+#   3. git add spots feed && git commit && git push  -> у пользователей появится само.
+#
+# Новый exe:
+#   .\tools\Publish-Release.ps1 -Version "1.2.0" [-Repo "Egzotik/drifthub"]
+#   Собирает exe в publish/, обновляет app-секцию feed/manifest.json,
+#   заливает DriftHub.exe в GitHub-релиз через `gh` (или печатает ручную инструкцию).
+#   Затем: git add feed && git commit && git push.
 param(
     [string]$Version = "1.1.1",
     [string]$Repo = "Egzotik/drifthub",
+    [string]$Branch = "main",
     [string]$SpotsDir = "spots",
+    [switch]$SpotsOnly,
     [switch]$SkipBuild
 )
 
@@ -22,83 +27,93 @@ function Sha256([string]$path) {
     return (Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash.ToLowerInvariant()
 }
 
-if (-not $SkipBuild) {
-    Write-Host "== build publish-next =="
-    dotnet publish "DriftHub.csproj" -c Release -r win-x64 --self-contained true `
-        -o "publish-next" /p:PublishSingleFile=true /p:Version=$Version
-    if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
-}
-
-$Exe = Join-Path $Root "publish-next\DriftHub.exe"
-if (-not (Test-Path -LiteralPath $Exe)) { throw "Нет $Exe — сначала собери без -SkipBuild" }
-$ExeSha = Sha256 $Exe
-Write-Host "exe sha256: $ExeSha"
-
-$Feed = Join-Path $Root ".feed"
-New-Item -ItemType Directory -Force -Path $Feed | Out-Null
-Copy-Item -LiteralPath $Exe -Destination (Join-Path $Feed "DriftHub.exe") -Force
-
+# --- споты: всегда из гита (raw URLs), хэши с локальных файлов ---
 $Spots = @()
 $Src = Join-Path $Root $SpotsDir
+$rawBase = "https://raw.githubusercontent.com/$Repo/$Branch/$SpotsDir"
 if (Test-Path -LiteralPath $Src) {
     foreach ($dir in Get-ChildItem -LiteralPath $Src -Directory | Where-Object { $_.Name -ne "_example" } | Sort-Object Name) {
         $jp = Join-Path $dir.FullName "spot.json"
         $ym = Get-ChildItem -LiteralPath $dir.FullName -Filter "*.ymap" -File | Select-Object -First 1
         if ($null -eq $ym) { Write-Host "skip $($dir.Name): нет .ymap"; continue }
-        $meta = @{ id = $dir.Name; name = $dir.Name; description = ""; version = 1; ymap = $ym.Name }
+        $meta = @{ id = $dir.Name; name = $dir.Name; description = ""; version = 1 }
         if (Test-Path -LiteralPath $jp) {
             try { $j = Get-Content -LiteralPath $jp -Raw | ConvertFrom-Json
                 if ($j.id) { $meta.id = $j.id }
                 if ($j.name) { $meta.name = $j.name }
                 if ($j.description) { $meta.description = $j.description }
                 if ($j.version) { $meta.version = [int]$j.version }
-            } catch { Write-Host "warn: битый spot.json в $($dir.Name)" }
+            } catch { Write-Host "warn: битый spot.json в $($dir.Name)"; continue }
         }
         $id = $meta.id
-        $ymapAsset = "$id.ymap"
-        Copy-Item -LiteralPath $ym.FullName -Destination (Join-Path $Feed $ymapAsset) -Force
-        $prev = Get-ChildItem -LiteralPath $dir.FullName -File | Where-Object { $_.Name -like "preview*" } | Select-Object -First 1
-        $prevAsset = $null; $prevSha = $null
-        if ($null -ne $prev) {
-            $prevAsset = "$id.preview$($prev.Extension)"
-            Copy-Item -LiteralPath $prev.FullName -Destination (Join-Path $Feed $prevAsset) -Force
-            $prevSha = Sha256 (Join-Path $Feed $prevAsset)
-        }
-        $base = "https://github.com/$Repo/releases/download/v$Version"
         $entry = [ordered]@{
             id = $id; version = $meta.version; name = $meta.name; description = $meta.description
-            file = $ymapAsset; ymapUrl = "$base/$ymapAsset"; ymapSha256 = (Sha256 (Join-Path $Feed $ymapAsset))
+            file = $ym.Name
+            ymapUrl = "$rawBase/$($dir.Name)/$($ym.Name)"
+            ymapSha256 = (Sha256 $ym.FullName)
         }
-        if ($prevAsset) {
-            $entry.previewUrl = "$base/$prevAsset"
-            $entry.previewSha256 = $prevSha
+        $prev = Get-ChildItem -LiteralPath $dir.FullName -File | Where-Object { $_.Name -like "preview*" } | Select-Object -First 1
+        if ($null -ne $prev) {
+            $entry.previewUrl = "$rawBase/$($dir.Name)/$($prev.Name)"
+            $entry.previewSha256 = (Sha256 $prev.FullName)
         }
         $Spots += $entry
         Write-Host "spot: $id v$($meta.version)"
     }
-} else { Write-Host "warn: нет папки $SpotsDir — релиз только с exe" }
+} else { Write-Host "warn: нет папки $SpotsDir" }
+
+$FeedDir = Join-Path $Root "feed"
+New-Item -ItemType Directory -Force -Path $FeedDir | Out-Null
+$ManifestPath = Join-Path $FeedDir "manifest.json"
+
+# app-секция: из существующего манифеста, либо новая при релизе exe
+$appVersion = ""; $appUrl = ""; $appSha = ""
+if (Test-Path -LiteralPath $ManifestPath) {
+    try { $old = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+        $appVersion = $old.appVersion; $appUrl = $old.appUrl; $appSha = $old.appSha256
+    } catch { Write-Host "warn: битый старый manifest, app-секция сброшена" }
+}
+
+if (-not $SpotsOnly) {
+    Write-Host "== build publish =="
+    try {
+        dotnet publish "DriftHub.csproj" -c Release -r win-x64 --self-contained true `
+            -o "publish" /p:PublishSingleFile=true /p:Version=$Version
+        if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+    } catch {
+        throw "Не собралось (возможно, запущен publish\DriftHub.exe — закрой приложение и повтори). $($_.Exception.Message)"
+    }
+    $Exe = Join-Path $Root "publish\DriftHub.exe"
+    $appVersion = $Version
+    $appUrl = "https://github.com/$Repo/releases/download/v$Version/DriftHub.exe"
+    $appSha = Sha256 $Exe
+    Write-Host "exe sha256: $appSha"
+}
 
 $manifest = [ordered]@{
-    appVersion = $Version
-    appUrl = "https://github.com/$Repo/releases/download/v$Version/DriftHub.exe"
-    appSha256 = $ExeSha
+    appVersion = $appVersion
+    appUrl = $appUrl
+    appSha256 = $appSha
     spots = $Spots
 }
-[IO.File]::WriteAllText((Join-Path $Feed "manifest.json"), ($manifest | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
-Write-Host "manifest: $($Spots.Count) спотов -> .feed\manifest.json"
+[IO.File]::WriteAllText($ManifestPath, ($manifest | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
+Write-Host "manifest: $($Spots.Count) спотов -> feed\manifest.json"
 
-$assets = @((Join-Path $Feed "DriftHub.exe"), (Join-Path $Feed "manifest.json")) +
-    (Get-ChildItem -LiteralPath $Feed -File | Where-Object { $_.Name -notin @("DriftHub.exe","manifest.json") } | ForEach-Object { $_.FullName }))
+if ($SpotsOnly) {
+    Write-Host ""
+    Write-Host "Дальше: git add spots feed; git commit -m 'spots: ...'; git push"
+    Write-Host "Фид: https://raw.githubusercontent.com/$Repo/$Branch/feed/manifest.json"
+    return
+}
 
 if (Get-Command gh -ErrorAction SilentlyContinue) {
     Write-Host "== gh release create v$Version =="
-    gh release create "v$Version" --repo $Repo --title "v$Version" --notes "DriftHub $Version" -- $assets
-    Write-Host "OK: релиз залит. Проверка: https://github.com/$Repo/releases/latest/download/manifest.json"
+    gh release create "v$Version" --repo $Repo --title "v$Version" --notes "DriftHub $Version" -- (Join-Path $Root "publish\DriftHub.exe")
+    Write-Host "Дальше: git add feed; git commit -m 'release v$Version'; git push"
 } else {
     Write-Host ""
     Write-Host "gh не найден. Создай релиз вручную:"
     Write-Host "  1. https://github.com/$Repo/releases/new -> tag v$Version"
-    Write-Host "  2. Приложи файлы из .feed/ :"
-    foreach ($a in $assets) { Write-Host "     - $a" }
-    Write-Host "  3. Проверь: https://github.com/$Repo/releases/latest/download/manifest.json"
+    Write-Host "  2. Приложи publish\DriftHub.exe"
+    Write-Host "  3. git add feed; git commit -m 'release v$Version'; git push"
 }

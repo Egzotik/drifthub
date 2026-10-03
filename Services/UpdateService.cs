@@ -1,5 +1,5 @@
-// Проверка обновлений при старте: manifest.json из GitHub Releases.
-// - Новая версия exe  -> скачать, проверить sha256, заменить себя и перезапуститься.
+// Проверка обновлений при старте: manifest.json из гита (raw).
+// - Новая версия exe  -> скачать из GitHub-релиза, проверить sha256, заменить себя и перезапуститься.
 // - Новые/обновлённые споты -> тихо докачать в spots/<id>/ в фоне.
 // Локальный spot.json с "source":"feed" считается управляемым фидом;
 // ручные папки без этой метки никогда не удаляются и не затираются,
@@ -35,7 +35,7 @@ public static class UpdateService
                 }
             }
             catch { }
-            return $"https://github.com/{DefaultRepo}/releases/latest/download/manifest.json";
+            return $"https://raw.githubusercontent.com/{DefaultRepo}/main/feed/manifest.json";
         }
     }
 
@@ -61,7 +61,7 @@ public static class UpdateService
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            log?.Invoke("Обновления: релиз пока не опубликован, работаю офлайн.");
+            log?.Invoke("Обновления: фид пока пуст, работаю офлайн.");
             return new(false, CurrentVersion, "", 0, 0);
         }
         catch (Exception ex)

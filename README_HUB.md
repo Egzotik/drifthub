@@ -24,24 +24,31 @@ spots/<id>/payload.zip (ymap + _manifest.ymf + пропсы)
 - установка копированием в `GTA/mods/custom_maps/<dlcName>/`
 - генерация `DRIFTHUB_README.txt` с ручным шагом: CodeWalker RPF Explorer → `mods/update/x64/dlcpacks` + строка в `dlclist.xml`
 
-## Автообновления и фид спотов (GitHub Releases)
-При старте exe тихо проверяет `manifest.json` из последнего GitHub-релиза:
-- `https://github.com/Egzotik/drifthub/releases/latest/download/manifest.json`
+## Автообновления и фид спотов (через гит)
+При старте exe тихо проверяет `feed/manifest.json` прямо из репозитория (raw):
+- `https://raw.githubusercontent.com/Egzotik/drifthub/main/feed/manifest.json`
 - другой URL можно положить в `%AppData%\DriftHub\feed_url.txt`
-- нет сети → работает офлайн, ничего не ломается
+- нет сети или фид пуст → работает офлайн, ничего не ломается
+- дальше перепроверка каждые 30 минут тихо + кнопка «Обновления» в шапке
 
-Если `appVersion` новее текущей — exe скачивается (проверка SHA256),
+Если `appVersion` новее текущей — exe скачивается из GitHub-релиза (проверка SHA256),
 заменяет себя через bat-скрипт и перезапускается.
 Споты с версией выше локальной докачиваются в `spots/<id>/` (ymap + preview + `spot.json`
 с полями `version`/`source:"feed"`). Ручные папки без метки `source:"feed"`
 никогда не затираются и не удаляются.
 
-Выпуск новой версии:
+Как добавить спот для всех:
 ```
-.\tools\Publish-Release.ps1 -Version "1.0.1"
+# 1. папка spots/<имя>/ : spot.json (id/name/description/ymap/version) + .ymap + preview.jpg
+# 2. поднять version в spot.json при каждом изменении ymap
+.\tools\Publish-Release.ps1 -SpotsOnly
+git add spots feed; git commit -m "spots: ..."; git push
 ```
-Скрипт публикует single-file exe, собирает `.feed/` (exe + manifest + ymap/превью),
-считает SHA256 и заливает всё в релиз `v1.0.1` через `gh`     (или печатает ручную инструкцию).
+Новый exe:
+```
+.\tools\Publish-Release.ps1 -Version "1.2.0"
+git add feed; git commit -m "release v1.2.0"; git push
+```
 
 ## Фаза 2 — CodeWalker.Core (RPF напрямую)
 1. `git submodule add https://github.com/dexyfex/CodeWalker external/CodeWalker`
