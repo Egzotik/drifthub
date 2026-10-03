@@ -3,6 +3,23 @@
     "appUrl":  "",
     "appSha256":  "",
     "spots":  [
-
+                  {
+                      "id":  "TestEgzo",
+                      "version":  1,
+                      "name":  "TestEgzo",
+                      "description":  "Р—Р°РјРµРЅРё С„Р°Р№Р»С‹ РІ СЌС‚РѕР№ РїР°РїРєРµ РЅР° СЃРІРѕР№ СЃРїРѕС‚ Рё РїРѕРґРЅРёРјРё version.",
+                      "file":  "meinmacht.ymap",
+                      "ymapUrl":  "https://raw.githubusercontent.com/Egzotik/drifthub/main/spots/testegzo/meinmacht.ymap",
+                      "ymapSha256":  "8ace0362713b80c8b3f91b24e3a3ad9812a65b57c07c67e78968e71e48ab16b3"
+                  },
+                  {
+                      "id":  "TestUbi",
+                      "version":  1,
+                      "name":  "TestUbi",
+                      "description":  "Р—Р°РјРµРЅРё С„Р°Р№Р»С‹ РІ СЌС‚РѕР№ РїР°РїРєРµ РЅР° СЃРІРѕР№ СЃРїРѕС‚ Рё РїРѕРґРЅРёРјРё version.",
+                      "file":  "moxy.ymap",
+                      "ymapUrl":  "https://raw.githubusercontent.com/Egzotik/drifthub/main/spots/testubi/moxy.ymap",
+                      "ymapSha256":  "f3a2bcf55cdf28d03e25981179578b961df3a1bb5b7f4d5459f642f209f2b284"
+                  }
               ]
 }
