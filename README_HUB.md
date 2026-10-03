@@ -40,15 +40,23 @@ spots/<id>/payload.zip (ymap + _manifest.ymf + пропсы)
 Как добавить спот для всех:
 ```
 # 1. папка spots/<имя>/ : spot.json (id/name/description/ymap/version) + .ymap + preview.jpg
+#    (spot.json можно сохранять в любой кодировке — UTF-8 и Windows-1251 читаются)
 # 2. поднять version в spot.json при каждом изменении ymap
 .\tools\Publish-Release.ps1 -SpotsOnly
 git add spots feed; git commit -m "spots: ..."; git push
 ```
+Или проще: положи файлы в `spots/<имя>/` и запусти `push-spots.bat` — он сам
+пересоберёт фид, закоммитит и запушит (спросит только сообщение коммита).
 Новый exe:
 ```
 .\tools\Publish-Release.ps1 -Version "1.2.0"
 git add feed; git commit -m "release v1.2.0"; git push
 ```
+
+## Прочее
+- Лог работы: `%AppData%\DriftHub\drifthub.log` (консоли в окне нет, только статус-строка).
+- Свой логотип: положи `logo.png` в `Assets/` рядом с exe — подхватится в шапку,
+  на стартовый экран и иконку окна. Нет файла — рисуется встроенная бесконечность.
 
 ## Фаза 2 — CodeWalker.Core (RPF напрямую)
 1. `git submodule add https://github.com/dexyfex/CodeWalker external/CodeWalker`

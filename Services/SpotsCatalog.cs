@@ -34,7 +34,7 @@ public static class SpotsCatalog
                 var jp = Path.Combine(dir, "spot.json");
                 if (File.Exists(jp))
                 {
-                    var raw = JsonSerializer.Deserialize<SpotJson>(File.ReadAllText(jp),
+                    var raw = JsonSerializer.Deserialize<SpotJson>(TextFiles.ReadAllText(jp),
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (raw != null)
                     {

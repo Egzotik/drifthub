@@ -227,7 +227,7 @@ public static class UpdateService
         if (!File.Exists(jp)) return Directory.Exists(dir) && Directory.GetFiles(dir, "*.ymap").Any() ? int.MaxValue : -1;
         try
         {
-            using var d = JsonDocument.Parse(File.ReadAllText(jp));
+            using var d = JsonDocument.Parse(TextFiles.ReadAllText(jp));
             // ручные споты (без метки фида) не трогаем никогда
             if (d.RootElement.TryGetProperty("source", out var src) &&
                 !string.Equals(src.GetString(), "feed", StringComparison.OrdinalIgnoreCase))
